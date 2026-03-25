@@ -14,5 +14,6 @@ Haftalık ilerleme raporları ve teknik detaylara aşağıdaki tablodan ulaşabi
 | **3. Hafta** | Canlı Veri Dış Servis (Sportmonks API) Entegrasyonu | [3. Hafta Raporunu Oku](raporlar/Hafta_03.md) | ✅ Tamamlandı |
 | **4. Hafta** | Asenkron Veri Motoru (BackgroundService) Kurulumu | [4. Hafta Raporunu Oku](raporlar/Hafta_04.md) | ✅ Tamamlandı |
 | **5. Hafta** | Kullanıcı Arayüzü ve Frontend (Tailwind CSS) | [5. Hafta Raporunu Oku](raporlar/Hafta_05.md) | ✅ Tamamlandı |
+| **6. Hafta** | 6. Hafta Başarıyla Tamamlandı| [6. Hafta Raporunu Oku](raporlar/Hafta_05.md) | ✅ Tamamlandı |
 
 *Not: 6. ve 10. hafta hedeflerimiz sırayla maç detay sayfalarının oluşturulması, SignalR eklentisi, üyelik sistemi ve VDS canlı server dağıtımı (Deployment) üzerinedir.*
