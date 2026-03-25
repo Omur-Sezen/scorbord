@@ -1,0 +1,129 @@
+@{
+    ViewData["Title"] = "Hakkında - SKORBORD";
+}
+
+<div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-8">
+        <h1 class="text-4xl font-bold mb-4">SKORBORD Hakkında</h1>
+        <p class="text-purple-100 text-lg">Canlı skorlar ve puan durumu takibi platformu</p>
+    </div>
+
+    <div class="p-8">
+        <div class="prose max-w-none">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-bullseye text-purple-600 mr-2"></i>
+                Misyonumuz
+            </h2>
+            <p class="text-gray-600 mb-8">
+                SKORBORD, spor tutkunları için kapsamlı bir canlı skor ve puan durumu takibi platformudur. 
+                Amacımız, futbol severlere en güncel ve doğru bilgileri hızlıca sunarak maç deneyimini 
+                daha keyifli hale getirmektir.
+            </p>
+
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                Özelliklerimiz
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-sync-alt text-blue-600 text-xl mr-3"></i>
+                        <h3 class="font-semibold text-gray-800">Otomatik Güncelleme</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Veriler her 5 dakikada bir otomatik olarak güncellenir, böylece en son skorları 
+                        ve puan durumunu her zaman takip edebilirsiniz.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-globe text-green-600 text-xl mr-3"></i>
+                        <h3 class="font-semibold text-gray-800">Çoklu Lig Desteği</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Premier Lig, La Liga, Serie A, Bundesliga, Ligue 1 ve Süper Lig gibi 
+                        dünyanın en önemli liglerini tek bir platformda takip edin.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-mobile-alt text-purple-600 text-xl mr-3"></i>
+                        <h3 class="font-semibold text-gray-800">Mobil Uyumlu</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Responsive tasarım sayesinde telefon, tablet ve masaüstü cihazlarda 
+                        sorunsuz bir kullanım deneyimi sunar.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-chart-line text-orange-600 text-xl mr-3"></i>
+                        <h3 class="font-semibold text-gray-800">Detaylı İstatistikler</h3>
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                        Puan durumu, gol farkı, oynanan maçlar ve daha birçok istatistikle 
+                        takımların performansını detaylı analiz edin.
+                    </p>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-code text-indigo-600 mr-2"></i>
+                Teknoloji
+            </h2>
+            <p class="text-gray-600 mb-4">
+                SKORBord, modern web teknolojileri kullanılarak geliştirilmiştir:
+            </p>
+            
+            <div class="bg-gray-900 text-gray-100 rounded-lg p-6 mb-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <i class="fas fa-server text-blue-400 text-2xl mb-2"></i>
+                        <p class="text-sm">ASP.NET Core</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-database text-green-400 text-2xl mb-2"></i>
+                        <p class="text-sm">SQL Server</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-wind text-cyan-400 text-2xl mb-2"></i>
+                        <p class="text-sm">Tailwind CSS</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-plug text-orange-400 text-2xl mb-2"></i>
+                        <p class="text-sm">API Integration</p>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-envelope text-red-600 mr-2"></i>
+                İletişim
+            </h2>
+            <p class="text-gray-600 mb-4">
+                Her türlü geri bildirim, öneri ve sorularınız için bizimle iletişime geçebilirsiniz.
+                Platformumuzu daha iyi hale getirmek için görüşlerinizi önemsiyoruz.
+            </p>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="text-blue-800 font-medium">Proje Durumu</p>
+                        <p class="text-blue-600 text-sm">Bu proje geliştirme aşamasındadır ve sürekli olarak yeni özellikler eklenmektedir.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-6">
+    <a asp-controller="Home" asp-action="Index" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">
+        <i class="fas fa-arrow-left mr-2"></i>Ana Sayfaya Dön
+    </a>
+</div>

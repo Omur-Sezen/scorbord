@@ -1,0 +1,22 @@
+# Visual Studio and .NET build artifacts
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.db-shm
+*.db-wal
+.vscode/
+
+# Environment files
+appsettings.Development.json
+secrets.json
+
+# Tooling and caching
+.gemini/
+raporlar/Hafta_06.md
+raporlar/Hafta_07.md
+raporlar/Hafta_08.md
+raporlar/Hafta_09.md
+raporlar/Hafta_10.md

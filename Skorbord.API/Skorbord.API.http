@@ -1,0 +1,6 @@
+@Skorbord.API_HostAddress = http://localhost:5208
+
+GET {{Skorbord.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

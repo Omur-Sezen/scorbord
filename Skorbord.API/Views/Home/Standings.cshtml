@@ -1,0 +1,130 @@
+@model LeagueStandingsDto
+@{
+    ViewData["Title"] = $"{Model.LeagueName} - Puan Durumu";
+}
+
+<div class="mb-6">
+    <nav class="text-sm">
+        <a asp-controller="Home" asp-action="Index" class="text-blue-600 hover:underline">Ana Sayfa</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-600">@Model.LeagueName Puan Durumu</span>
+    </nav>
+</div>
+
+<div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">@Model.LeagueName</h1>
+                <p class="text-blue-100">@Model.Season Sezonu</p>
+            </div>
+            <div class="text-right">
+                <p class="text-blue-100 text-sm">Son Güncelleme</p>
+                <p class="font-semibold">@DateTime.Now.ToString("dd.MM.yyyy HH:mm")</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto" data-live="true">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Takım</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">O</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">G</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">B</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">M</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">A</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Y</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">AV</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">P</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var team in Model.Standings)
+                {
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="text-sm font-medium text-gray-900">@team.Position</span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span class="text-xs font-bold text-blue-600">@team.TeamShortName</span>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900">@team.TeamName</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-900">@team.Played</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-900">@team.Won</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-900">@team.Drawn</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-900">@team.Lost</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-900">@team.GoalsFor</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-900">@team.GoalsAgainst</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center">
+                            <span class="text-sm font-medium @(team.GoalDifference > 0 ? "text-green-600" : team.GoalDifference < 0 ? "text-red-600" : "text-gray-900")">
+                                @(team.GoalDifference > 0 ? "+" : "")@team.GoalDifference
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-center">
+                            <span class="text-lg font-bold text-blue-600">@team.Points</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Standings.Any())
+    {
+        <div class="text-center py-12">
+            <i class="fas fa-table text-gray-300 text-6xl mb-4"></i>
+            <p class="text-gray-500 text-lg">Bu lig için henüz puan durumu verisi bulunmamaktadır.</p>
+            <p class="text-gray-400 text-sm mt-2">Maçlar başladığında puan durumu otomatik olarak güncellenecektir.</p>
+        </div>
+    }
+</div>
+
+<div class="mt-6 flex justify-between items-center">
+    <a asp-controller="Home" asp-action="Index" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">
+        <i class="fas fa-arrow-left mr-2"></i>Geri Dön
+    </a>
+    
+    <div class="text-sm text-gray-600">
+        <i class="fas fa-info-circle mr-1"></i>
+        Bu sayfa otomatik olarak güncellenmektedir
+    </div>
+    
+    <a asp-controller="Home" asp-action="Matches" asp-route-leagueId="@Model.LeagueId" 
+       class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+        <i class="fas fa-calendar mr-2"></i>Maçları Göster
+    </a>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh standings every 30 seconds
+        let refreshInterval;
+        
+        function startAutoRefresh() {
+            refreshInterval = setInterval(() => {
+                location.reload();
+            }, 30000);
+        }
+        
+        // Start auto-refresh
+        startAutoRefresh();
+        
+        // Stop refresh when page is not visible
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                clearInterval(refreshInterval);
+            } else {
+                startAutoRefresh();
+            }
+        });
+    </script>
+}

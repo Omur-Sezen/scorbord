@@ -1,0 +1,151 @@
+@{
+    ViewData["Title"] = "SKORBORD - Canlı Skorlar";
+}
+
+<div class="text-center mb-8">
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">
+        <i class="fas fa-futbol text-blue-600 mr-3"></i>
+        SKORBORD
+    </h1>
+    <p class="text-xl text-gray-600">Canlı skorlar ve puan durumu takibi</p>
+</div>
+
+@if (ViewBag.DatabaseError != null)
+{
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl mr-4"></i>
+            <div>
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">Veritabanı Bağlantısı</h3>
+                <p class="text-yellow-700">@ViewBag.DatabaseError</p>
+                <p class="text-yellow-600 text-sm mt-2">
+                    API servisi çalışmaya devam ediyor. Swagger arayüzünden veri senkronizasyonu yapabilirsiniz.
+                </p>
+                <div class="mt-4">
+                    <a href="/swagger" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition">
+                        <i class="fas fa-cog mr-2"></i>API Arayüzü
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    @if (ViewBag.Leagues != null && ((IEnumerable<dynamic>)ViewBag.Leagues).Any())
+    {
+        @foreach (var league in ViewBag.Leagues)
+        {
+            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">@league.Name</h3>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        @league.Season
+                    </span>
+                </div>
+                <p class="text-gray-600 mb-4">
+                    <i class="fas fa-globe mr-2"></i>@league.Country
+                </p>
+                <div class="flex space-x-2">
+                    <a asp-controller="Home" asp-action="Standings" asp-route-leagueId="@league.Id" 
+                       class="flex-1 bg-blue-600 text-white text-center py-2 px-4 rounded hover:bg-blue-700 transition">
+                        <i class="fas fa-table mr-2"></i>Puan Durumu
+                    </a>
+                    <a asp-controller="Home" asp-action="Matches" asp-route-leagueId="@league.Id" 
+                       class="flex-1 bg-green-600 text-white text-center py-2 px-4 rounded hover:bg-green-700 transition">
+                        <i class="fas fa-calendar mr-2"></i>Maçlar
+                    </a>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-span-full">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 text-2xl mr-4"></i>
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Lig Verisi</h3>
+                        <p class="text-blue-700 mb-3">
+                            @if (ViewBag.DatabaseError != null)
+                            {
+                                @:Veritabanı bağlantısı olmadığı için lig verisi gösterilemiyor.
+                            }
+                            else
+                            {
+                                @:Henüz lig verisi bulunmamaktadır. Lütfen önce ligleri senkronize edin.
+                            }
+                        </p>
+                        <div class="flex space-x-3">
+                            <a href="/swagger" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-sync mr-2"></i>Veri Senkronizasyonu
+                            </a>
+                            <a asp-controller="Home" asp-action="About" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">
+                                <i class="fas fa-info mr-2"></i>Daha Fazla Bilgi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="grid md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+            Özellikler
+        </h2>
+        <ul class="space-y-3">
+            <li class="flex items-center text-gray-700">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                Canlı skor takibi
+            </li>
+            <li class="flex items-center text-gray-700">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                Puan durumu tablosu
+            </li>
+            <li class="flex items-center text-gray-700">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                Maç detayları ve istatistikler
+            </li>
+            <li class="flex items-center text-gray-700">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                Otomatik veri güncelleme
+            </li>
+            <li class="flex items-center text-gray-700">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                Çoklu lig desteği
+            </li>
+        </ul>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-sync text-blue-500 mr-2"></i>
+            Son Güncelleme
+        </h2>
+        <div class="text-gray-700">
+            <p class="mb-2">
+                <i class="fas fa-clock mr-2"></i>
+                Veriler otomatik olarak her 5 dakikada bir güncellenir.
+            </p>
+            <div class="bg-gray-100 rounded p-3">
+                <p class="text-sm text-gray-600">Son senkronizasyon:</p>
+                <p class="font-semibold" id="lastUpdate">@DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-8 text-center">
+    <p class="text-gray-600">
+        Daha fazla bilgi için 
+        <a asp-controller="Home" asp-action="About" class="text-blue-600 hover:underline">
+            Hakkında sayfasını
+        </a> 
+        ziyaret edin.
+    </p>
+</div>
