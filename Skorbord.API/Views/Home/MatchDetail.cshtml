@@ -1,0 +1,164 @@
+@using Skorbord.API.Models
+@model MatchViewModel
+@{
+    ViewData["Title"] = Model != null ? $"{Model.HomeTeam} vs {Model.AwayTeam}" : "Maç Detayı";
+    var league = ViewBag.League as LeagueViewModel;
+    var selectedDate = (string)(ViewBag.SelectedDate ?? DateTime.Now.ToString("yyyy-MM-dd"));
+}
+
+<!-- Breadcrumb -->
+<div class="mb-6">
+    <nav class="flex items-center gap-2 text-sm text-slate-400">
+        <a href="/" class="hover:text-emerald-400 transition">
+            <i class="fas fa-home mr-1"></i>Ana Sayfa
+        </a>
+        @if (league != null)
+        {
+            <i class="fas fa-chevron-right text-xs text-slate-600"></i>
+            <a href="/Home/Matches/@Uri.EscapeDataString(league.League)?date=@selectedDate"
+               class="hover:text-emerald-400 transition">@league.League</a>
+        }
+        <i class="fas fa-chevron-right text-xs text-slate-600"></i>
+        <span class="text-slate-200">Maç Detayı</span>
+    </nav>
+</div>
+
+@if (Model == null)
+{
+    <div class="error-card">
+        <div class="text-4xl mb-3">❌</div>
+        <p class="text-red-300">Maç bulunamadı.</p>
+        <a href="/" class="btn-retry mt-3 inline-flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>Ana Sayfaya Dön
+        </a>
+    </div>
+}
+else
+{
+    <!-- Maç Kartı -->
+    <div class="match-detail-card mb-6">
+
+        <!-- Lig Bilgisi -->
+        @if (league != null)
+        {
+            <div class="match-detail-league">
+                <i class="fas fa-trophy mr-2 text-yellow-400"></i>
+                @league.League · @league.Country · @league.Sport
+            </div>
+        }
+
+        <!-- Durum -->
+        <div class="text-center mb-6">
+            @if (Model.IsLive)
+            {
+                <span class="status-live-large">
+                    <span class="pulse-ring"></span>
+                    <i class="fas fa-circle text-xs mr-1"></i> @Model.Status
+                </span>
+            }
+            else if (Model.State == "post")
+            {
+                <span class="status-finished-large">
+                    <i class="fas fa-flag-checkered mr-2"></i>@Model.Status
+                </span>
+            }
+            else
+            {
+                <span class="status-scheduled-large">
+                    <i class="fas fa-clock mr-2"></i>@Model.StartTime
+                </span>
+            }
+        </div>
+
+        <!-- Skor Alanı -->
+        <div class="match-scoreboard">
+            <div class="team-col">
+                <div class="team-avatar home">
+                    @(Model.HomeTeam.Length > 0 ? Model.HomeTeam[0].ToString() : "?")
+                </div>
+                <h2 class="team-name-large">@Model.HomeTeam</h2>
+            </div>
+
+            <div class="scoreboard-center">
+                @if (Model.HomeScore.HasValue && Model.AwayScore.HasValue)
+                {
+                    <div class="big-score">
+                        <span class="@(Model.HomeScore > Model.AwayScore ? "score-winner" : "")">@Model.HomeScore</span>
+                        <span class="score-divider">:</span>
+                        <span class="@(Model.AwayScore > Model.HomeScore ? "score-winner" : "")">@Model.AwayScore</span>
+                    </div>
+
+                    @if (Model.HalfTimeScore != null)
+                    {
+                        <div class="ht-score-large">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            İlk Yarı: @Model.HalfTimeScore.Home - @Model.HalfTimeScore.Away
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="upcoming-score">
+                        <span class="text-slate-400 text-2xl">vs</span>
+                        <div class="text-emerald-400 text-sm mt-2">
+                            <i class="fas fa-clock mr-1"></i>@Model.StartTime
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="team-col">
+                <div class="team-avatar away">
+                    @(Model.AwayTeam.Length > 0 ? Model.AwayTeam[0].ToString() : "?")
+                </div>
+                <h2 class="team-name-large">@Model.AwayTeam</h2>
+            </div>
+        </div>
+
+        <!-- Maç Bilgileri -->
+        <div class="match-info-grid mt-8">
+            <div class="info-item">
+                <span class="info-label"><i class="fas fa-calendar mr-1"></i>Tarih</span>
+                <span class="info-value">@selectedDate</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label"><i class="fas fa-clock mr-1"></i>Saat</span>
+                <span class="info-value">@Model.StartTime</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label"><i class="fas fa-info-circle mr-1"></i>Durum</span>
+                <span class="info-value">@Model.Status</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label"><i class="fas fa-code mr-1"></i>Durum Kodu</span>
+                <span class="info-value text-slate-400">@Model.StatusCode</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Geri butonu -->
+    <div class="flex justify-between">
+        <a href="@(league != null ? $"/Home/Matches/{Uri.EscapeDataString(league.League)}?date={selectedDate}" : "/")"
+           class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Maç Listesine Dön
+        </a>
+        @if (Model.IsLive)
+        {
+            <button onclick="location.reload()" class="btn-primary">
+                <i class="fas fa-sync-alt mr-2"></i>Yenile
+            </button>
+        }
+    </div>
+}
+
+@section Scripts {
+<script>
+    @if (Model?.IsLive == true)
+    {
+        <text>
+        setTimeout(() => location.reload(), 30000);
+        </text>
+    }
+</script>
+}

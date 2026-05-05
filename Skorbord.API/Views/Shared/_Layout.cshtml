@@ -3,93 +3,53 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Canlı Mac Skorları - Futbol, Basketbol, Tenis - SportScore kaynaklı gerçek zamanlı sonuçlar" />
     <title>@ViewData["Title"] - SKORBORD</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/skorbord.css" />
 </head>
-<body class="bg-gray-100">
-    <header class="bg-blue-600 text-white shadow-lg">
-        <nav class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <a asp-controller="Home" asp-action="Index" class="text-2xl font-bold flex items-center">
-                        <i class="fas fa-futbol mr-2"></i>
-                        SKORBORD
+<body>
+    <div class="app-shell">
+
+        <nav class="top-nav">
+            <div class="nav-inner">
+                <a href="/" class="nav-logo">
+                    <div class="logo-icon">⚽</div>
+                    SKORBORD
+                </a>
+                <div class="nav-links">
+                    <a href="/" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                        <i class="fas fa-home mr-1"></i>Canlı Skorlar
+                    </a>
+                    <a href="/Home/About" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "About" ? "active" : "")">
+                        <i class="fas fa-info-circle mr-1"></i>Hakkında
                     </a>
                 </div>
-                <div class="hidden md:flex space-x-6">
-                    <a asp-controller="Home" asp-action="Index" class="hover:text-blue-200 transition">Ana Sayfa</a>
-                    <a asp-controller="Home" asp-action="About" class="hover:text-blue-200 transition">Hakkında</a>
-                </div>
-                <div class="md:hidden">
-                    <button class="text-white" onclick="toggleMobileMenu()">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
-                </div>
             </div>
-            <!-- Mobile Menu -->
-            <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4">
-                <a asp-controller="Home" asp-action="Index" class="block py-2 hover:text-blue-200 transition">Ana Sayfa</a>
-                <a asp-controller="Home" asp-action="About" class="block py-2 hover:text-blue-200 transition">Hakkında</a>
+            <div class="refresh-bar">
+                <div class="refresh-bar-fill" id="refreshProgress"></div>
             </div>
         </nav>
-    </header>
 
-    <main class="container mx-auto px-4 py-8">
-        @if (TempData["Error"] != null)
-        {
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                @TempData["Error"]
-            </div>
-        }
-
-        @if (TempData["Success"] != null)
-        {
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                <i class="fas fa-check-circle mr-2"></i>
-                @TempData["Success"]
-            </div>
-        }
-
-        @RenderBody()
-    </main>
-
-    <footer class="bg-gray-800 text-white mt-12 py-8">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2024 SKORBORD. Tüm hakları saklıdır.</p>
-            <p class="text-gray-400 text-sm mt-2">Canlı skorlar ve puan durumu takibi</p>
-        </div>
-    </footer>
-
-    <script>
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
-        }
-
-        // Auto-refresh functionality for live scores
-        let refreshInterval;
-        
-        function startAutoRefresh() {
-            refreshInterval = setInterval(() => {
-                location.reload();
-            }, 30000); // Refresh every 30 seconds
-        }
-
-        function stopAutoRefresh() {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
+        <main class="main-content">
+            @if (TempData["Error"] != null)
+            {
+                <div class="error-card mb-4" style="margin-bottom:16px">
+                    <i class="fas fa-exclamation-triangle" style="margin-right:8px;color:#ef4444"></i>
+                    @TempData["Error"]
+                </div>
             }
-        }
 
-        // Start auto-refresh on pages with live scores
-        document.addEventListener('DOMContentLoaded', function() {
-            if (document.querySelector('[data-live="true"]')) {
-                startAutoRefresh();
-            }
-        });
-    </script>
+            @RenderBody()
+        </main>
+
+        <footer class="app-footer">
+            <p>
+                SKORBORD &middot; Veriler <a href="https://rapidapi.com/sportscore-sportscore-default/api/sportscore1" target="_blank">SportScore API</a> kaynağından canlı çekilmektedir
+            </p>
+        </footer>
+    </div>
 
     @RenderSection("Scripts", required: false)
 </body>

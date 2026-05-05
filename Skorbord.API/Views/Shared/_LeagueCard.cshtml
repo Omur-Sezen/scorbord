@@ -1,0 +1,104 @@
+@using Skorbord.API.Models
+@model LeagueViewModel
+
+<div class="league-card mb-3">
+    <!-- Lig Başlığı -->
+    <div class="league-card-header" onclick="toggleLeague('@(Model.League.Replace("'","").Replace(" ","-"))Matches')">
+        <div class="flex items-center gap-3">
+            @{
+                var sportIcon = Model.Sport == "Futbol" ? "fas fa-futbol" :
+                                Model.Sport == "Basketbol" ? "fas fa-basketball-ball" : "fas fa-table-tennis";
+                var sportColor = Model.Sport == "Futbol" ? "text-emerald-400" :
+                                 Model.Sport == "Basketbol" ? "text-orange-400" : "text-yellow-400";
+            }
+            <i class="@sportIcon @sportColor"></i>
+            <div>
+                <span class="league-name">@Model.League</span>
+                <span class="league-country">@Model.Country</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            @{
+                var liveCnt = Model.Matches.Count(m => m.IsLive);
+            }
+            @if (liveCnt > 0)
+            {
+                <span class="live-count-badge">
+                    <span class="pulse-dot-sm"></span>@liveCnt canlı
+                </span>
+            }
+            <span class="total-count-badge">@Model.Matches.Count maç</span>
+            <a href="/Home/Matches/@Uri.EscapeDataString(Model.League)" class="view-league-btn" onclick="event.stopPropagation()" title="Lig sayfasını aç">
+                <i class="fas fa-arrow-right"></i>
+            </a>
+            <i class="fas fa-chevron-down toggle-icon" id="icon-@(Model.League.Replace("'","").Replace(" ","-"))Matches"></i>
+        </div>
+    </div>
+
+    <!-- Maç Listesi (Collapsible) -->
+    <div class="league-matches" id="@(Model.League.Replace("'","").Replace(" ","-"))Matches">
+        @foreach (var match in Model.Matches.OrderBy(m => m.StartTime))
+        {
+            <a href="/Home/MatchDetail/@match.Id" class="match-row-compact group @(match.IsLive ? "live" : match.State == "post" ? "finished" : "")">
+                <!-- Saat + Durum -->
+                <div class="compact-time">
+                    @if (match.IsLive)
+                    {
+                        <span class="dot-live"></span>
+                    }
+                    <span>@match.StartTime</span>
+                </div>
+
+                <!-- Ev sahibi -->
+                <div class="compact-team text-right">
+                    @match.HomeTeam
+                </div>
+
+                <!-- Skor -->
+                <div class="compact-score">
+                    @if (match.HomeScore.HasValue && match.AwayScore.HasValue)
+                    {
+                        <span class="@(match.HomeScore > match.AwayScore ? "font-black text-white" : "text-slate-400")">@match.HomeScore</span>
+                        <span class="text-slate-600 text-xs">:</span>
+                        <span class="@(match.AwayScore > match.HomeScore ? "font-black text-white" : "text-slate-400")">@match.AwayScore</span>
+                    }
+                    else
+                    {
+                        <span class="text-slate-500 text-xs">vs</span>
+                    }
+                </div>
+
+                <!-- Deplasman -->
+                <div class="compact-team text-left">
+                    @match.AwayTeam
+                </div>
+
+                <!-- Durum badge -->
+                <div class="compact-status">
+                    @if (match.IsLive)
+                    {
+                        <span class="cmp-badge live">@match.Status</span>
+                    }
+                    else if (match.State == "post")
+                    {
+                        <span class="cmp-badge fin">MS</span>
+                    }
+                    else
+                    {
+                        <span class="cmp-badge sch">@match.Status</span>
+                    }
+                </div>
+            </a>
+        }
+    </div>
+</div>
+
+<script>
+    function toggleLeague(id) {
+        const el = document.getElementById(id);
+        const icon = document.getElementById('icon-' + id);
+        if (!el) return;
+        el.classList.toggle('collapsed');
+        if (icon) icon.classList.toggle('rotated');
+    }
+</script>

@@ -1,151 +1,266 @@
+@using Skorbord.API.Models
 @{
     ViewData["Title"] = "SKORBORD - Canlı Skorlar";
+    var data = ViewBag.Data as LivescoreViewModel;
+    var selectedSport = (string)(ViewBag.SelectedSport ?? "");
+    var selectedDate = (string)(ViewBag.SelectedDate ?? DateTime.Now.ToString("yyyy-MM-dd"));
+    var apiError = (bool)(ViewBag.ApiError ?? false);
 }
 
-<div class="text-center mb-8">
-    <h1 class="text-4xl font-bold text-gray-800 mb-4">
-        <i class="fas fa-futbol text-blue-600 mr-3"></i>
-        SKORBORD
-    </h1>
-    <p class="text-xl text-gray-600">Canlı skorlar ve puan durumu takibi</p>
+<div class="hero-section mb-6">
+    <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+            <h1 style="font-size:32px;font-weight:900;color:var(--text-primary);display:flex;align-items:center;gap:12px">
+                <span class="live-pulse-dot"></span>
+                Canlı Skorlar
+            </h1>
+            <p style="color:var(--text-muted);margin-top:4px;font-size:13px">
+                <i class="fas fa-database" style="margin-right:4px;color:var(--accent-green)"></i>
+                Kaynak: <a href="https://rapidapi.com/sportscore-sportscore-default/api/sportscore1" target="_blank" style="color:var(--accent-green)">SportScore API</a>
+                @if (data != null && data.FetchedAt.Length >= 19)
+                {
+                    <span style="margin-left:8px;color:var(--text-muted)">· @data.FetchedAt.Substring(11, 8) UTC'de güncellendi</span>
+                }
+            </p>
+        </div>
+
+        <form method="get" action="/" id="filterForm" style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+            <div class="filter-group">
+                <label class="filter-label">Spor</label>
+                <div class="sport-tabs">
+                    <button type="button" class="sport-tab @(selectedSport == "" ? "active" : "")" onclick="setSport('')">
+                        <i class="fas fa-globe-europe"></i> Tümü
+                    </button>
+                    <button type="button" class="sport-tab @(selectedSport == "Soccer" ? "active" : "")" onclick="setSport('Soccer')">
+                        <i class="fas fa-futbol"></i> Futbol
+                    </button>
+                    <button type="button" class="sport-tab @(selectedSport == "Basketball" ? "active" : "")" onclick="setSport('Basketball')">
+                        <i class="fas fa-basketball-ball"></i> Basketbol
+                    </button>
+                    <button type="button" class="sport-tab @(selectedSport == "Tennis" ? "active" : "")" onclick="setSport('Tennis')">
+                        <i class="fas fa-table-tennis"></i> Tenis
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Tarih</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button type="button" onclick="changeDate(-1)" class="date-nav-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <input type="date" id="dateInput" name="date" value="@selectedDate"
+                           class="date-input" onchange="submitForm()" />
+                    <button type="button" onclick="changeDate(1)" class="date-nav-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-group" style="margin-left: auto;">
+                <label class="filter-label">Arama</label>
+                <div style="position:relative;">
+                    <input type="text" id="searchInput" placeholder="Maç veya lig ara..." onkeyup="filterMatches()"
+                           style="padding: 8px 12px 8px 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.05); color: white; min-width: 220px; outline: none; font-size: 14px; height: 40px; transition: all 0.2s;" 
+                           onfocus="this.style.borderColor='rgba(59, 130, 246, 0.5)'; this.style.backgroundColor='rgba(255,255,255,0.1)'" 
+                           onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.backgroundColor='rgba(255,255,255,0.05)'" />
+                    <i class="fas fa-search" style="position:absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5);"></i>
+                </div>
+            </div>
+
+            <input type="hidden" id="sportInput" name="sport" value="@selectedSport" />
+        </form>
+    </div>
 </div>
 
-@if (ViewBag.DatabaseError != null)
+<div class="info-card" style="margin-bottom:24px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 16px;">
+    <div style="display:flex; align-items:flex-start; gap:12px">
+        <i class="fas fa-info-circle" style="color: #60a5fa; font-size: 20px; margin-top: 2px;"></i>
+        <div>
+            <h4 style="color: #93c5fd; font-weight: 600; font-size: 14px; margin-bottom: 4px; margin-top: 0;">API Kullanım Sınırı</h4>
+            <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 0;">
+                Kullandığımız SportScore API'nin ücretsiz planında aylık istek limiti bulunmaktadır. Sistem arka planda canlı maç verilerini güncel tutmak için sık istek atmaktadır. Limit aşıldığında veya bağlantı hatası durumlarında veri akışı durabilir.
+            </p>
+        </div>
+    </div>
+</div>
+
+@if (apiError)
 {
-    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-        <div class="flex items-center">
-            <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl mr-4"></i>
+    <div class="error-card" style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:16px">
+            <div style="font-size:36px">🚫</div>
             <div>
-                <h3 class="text-lg font-semibold text-yellow-800 mb-2">Veritabanı Bağlantısı</h3>
-                <p class="text-yellow-700">@ViewBag.DatabaseError</p>
-                <p class="text-yellow-600 text-sm mt-2">
-                    API servisi çalışmaya devam ediyor. Swagger arayüzünden veri senkronizasyonu yapabilirsiniz.
+                <h3 style="font-size:16px;font-weight:700;color:#fca5a5">API Bağlantı Hatası</h3>
+                <p style="color:#f87171;font-size:13px;margin-top:4px">
+                    SportScore API'ye ulaşılamıyor veya veri bulunamadı.
                 </p>
-                <div class="mt-4">
-                    <a href="/swagger" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition">
-                        <i class="fas fa-cog mr-2"></i>API Arayüzü
-                    </a>
-                </div>
+                <button onclick="location.reload()" class="btn-retry" style="margin-top:12px">
+                    <i class="fas fa-redo" style="margin-right:8px"></i>Tekrar Dene
+                </button>
             </div>
         </div>
     </div>
 }
 
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-    @if (ViewBag.Leagues != null && ((IEnumerable<dynamic>)ViewBag.Leagues).Any())
-    {
-        @foreach (var league in ViewBag.Leagues)
-        {
-            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">@league.Name</h3>
-                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                        @league.Season
-                    </span>
-                </div>
-                <p class="text-gray-600 mb-4">
-                    <i class="fas fa-globe mr-2"></i>@league.Country
-                </p>
-                <div class="flex space-x-2">
-                    <a asp-controller="Home" asp-action="Standings" asp-route-leagueId="@league.Id" 
-                       class="flex-1 bg-blue-600 text-white text-center py-2 px-4 rounded hover:bg-blue-700 transition">
-                        <i class="fas fa-table mr-2"></i>Puan Durumu
-                    </a>
-                    <a asp-controller="Home" asp-action="Matches" asp-route-leagueId="@league.Id" 
-                       class="flex-1 bg-green-600 text-white text-center py-2 px-4 rounded hover:bg-green-700 transition">
-                        <i class="fas fa-calendar mr-2"></i>Maçlar
-                    </a>
-                </div>
+@if (data != null)
+{
+    <div class="stats-grid" style="margin-bottom:24px">
+        <input type="hidden" id="liveMatchCount" value="@data.Summary.LiveMatches" />
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-list-ul"></i></div>
+            <div>
+                <p class="stat-label">Toplam Maç</p>
+                <p class="stat-value">@data.Summary.TotalMatches</p>
             </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="fas fa-signal"></i></div>
+            <div>
+                <p class="stat-label">Canlı</p>
+                <p class="stat-value" style="color:var(--accent-red)">@data.Summary.LiveMatches</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-check-double"></i></div>
+            <div>
+                <p class="stat-label">Biten</p>
+                <p class="stat-value" style="color:var(--accent-green)">@data.Summary.FinishedMatches</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fas fa-clock"></i></div>
+            <div>
+                <p class="stat-label">Planlanmış</p>
+                <p class="stat-value" style="color:var(--accent-yellow)">@data.Summary.ScheduledMatches</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-trophy"></i></div>
+            <div>
+                <p class="stat-label">Lig / Turnuva</p>
+                <p class="stat-value">@data.Summary.TotalLeagues</p>
+            </div>
+        </div>
+    </div>
+
+    @if (data.Leagues.Any())
+    {
+        var liveLeagues = data.Leagues.Where(l => l.Matches.Any(m => m.IsLive)).ToList();
+        var otherLeagues = data.Leagues.Where(l => !l.Matches.Any(m => m.IsLive)).ToList();
+
+        if (liveLeagues.Any())
+        {
+            <div class="section-header" style="margin-bottom:12px">
+                <span class="live-badge-large">
+                    <span class="pulse-ring"></span>
+                    <i class="fas fa-circle" style="font-size:10px;margin-right:4px"></i> CANLI
+                </span>
+                <span style="color:var(--text-muted);font-size:13px;margin-left:12px">@liveLeagues.Sum(l => l.Matches.Count(m => m.IsLive)) maç oynanıyor</span>
+            </div>
+            foreach (var league in liveLeagues)
+            {
+                @await Html.PartialAsync("_LeagueCard", league)
+            }
+        }
+
+        if (otherLeagues.Any())
+        {
+            <div class="section-header" style="margin-bottom:12px;margin-top:28px">
+                <span style="color:var(--text-muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:1px">
+                    <i class="fas fa-calendar-alt" style="margin-right:8px"></i>Tüm Maçlar
+                </span>
+            </div>
+            foreach (var league in otherLeagues)
+            {
+                @await Html.PartialAsync("_LeagueCard", league)
+            }
         }
     }
     else
     {
-        <div class="col-span-full">
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <div class="flex items-center">
-                    <i class="fas fa-info-circle text-blue-600 text-2xl mr-4"></i>
-                    <div>
-                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Lig Verisi</h3>
-                        <p class="text-blue-700 mb-3">
-                            @if (ViewBag.DatabaseError != null)
-                            {
-                                @:Veritabanı bağlantısı olmadığı için lig verisi gösterilemiyor.
-                            }
-                            else
-                            {
-                                @:Henüz lig verisi bulunmamaktadır. Lütfen önce ligleri senkronize edin.
-                            }
-                        </p>
-                        <div class="flex space-x-3">
-                            <a href="/swagger" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                                <i class="fas fa-sync mr-2"></i>Veri Senkronizasyonu
-                            </a>
-                            <a asp-controller="Home" asp-action="About" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">
-                                <i class="fas fa-info mr-2"></i>Daha Fazla Bilgi
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="empty-state">
+            <div style="font-size:48px;margin-bottom:16px">📅</div>
+            <h3 style="font-size:18px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">Bu tarih için maç bulunamadı</h3>
+            <p style="color:var(--text-muted);font-size:13px">Farklı bir tarih veya spor türü seçin.</p>
         </div>
     }
-</div>
+}
 
-<div class="grid md:grid-cols-2 gap-6">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">
-            <i class="fas fa-trophy text-yellow-500 mr-2"></i>
-            Özellikler
-        </h2>
-        <ul class="space-y-3">
-            <li class="flex items-center text-gray-700">
-                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                Canlı skor takibi
-            </li>
-            <li class="flex items-center text-gray-700">
-                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                Puan durumu tablosu
-            </li>
-            <li class="flex items-center text-gray-700">
-                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                Maç detayları ve istatistikler
-            </li>
-            <li class="flex items-center text-gray-700">
-                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                Otomatik veri güncelleme
-            </li>
-            <li class="flex items-center text-gray-700">
-                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                Çoklu lig desteği
-            </li>
-        </ul>
-    </div>
+@section Scripts {
+<script>
+    function filterMatches() {
+        const query = document.getElementById('searchInput').value.toLocaleLowerCase('tr-TR');
+        const leagues = document.querySelectorAll('.league-card');
 
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">
-            <i class="fas fa-sync text-blue-500 mr-2"></i>
-            Son Güncelleme
-        </h2>
-        <div class="text-gray-700">
-            <p class="mb-2">
-                <i class="fas fa-clock mr-2"></i>
-                Veriler otomatik olarak her 5 dakikada bir güncellenir.
-            </p>
-            <div class="bg-gray-100 rounded p-3">
-                <p class="text-sm text-gray-600">Son senkronizasyon:</p>
-                <p class="font-semibold" id="lastUpdate">@DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")</p>
-            </div>
-        </div>
-    </div>
-</div>
+        leagues.forEach(league => {
+            const leagueNameEl = league.querySelector('.league-name');
+            const leagueName = leagueNameEl ? leagueNameEl.textContent.toLocaleLowerCase('tr-TR') : '';
+            const matches = league.querySelectorAll('.match-row-compact');
+            let hasVisibleMatch = false;
 
-<div class="mt-8 text-center">
-    <p class="text-gray-600">
-        Daha fazla bilgi için 
-        <a asp-controller="Home" asp-action="About" class="text-blue-600 hover:underline">
-            Hakkında sayfasını
-        </a> 
-        ziyaret edin.
-    </p>
-</div>
+            matches.forEach(match => {
+                const homeTeamEl = match.querySelector('.compact-team.text-right');
+                const awayTeamEl = match.querySelector('.compact-team.text-left');
+                const homeTeam = homeTeamEl ? homeTeamEl.textContent.toLocaleLowerCase('tr-TR') : '';
+                const awayTeam = awayTeamEl ? awayTeamEl.textContent.toLocaleLowerCase('tr-TR') : '';
+                
+                if (leagueName.includes(query) || homeTeam.includes(query) || awayTeam.includes(query)) {
+                    match.style.display = '';
+                    hasVisibleMatch = true;
+                } else {
+                    match.style.display = 'none';
+                }
+            });
+
+            if (hasVisibleMatch || leagueName.includes(query)) {
+                league.style.display = '';
+                if (query.trim() !== '') {
+                    const matchesContainer = league.querySelector('.league-matches');
+                    const icon = league.querySelector('.toggle-icon');
+                    if (matchesContainer && matchesContainer.classList.contains('collapsed')) {
+                        matchesContainer.classList.remove('collapsed');
+                        if (icon) icon.classList.add('rotated');
+                    }
+                }
+            } else {
+                league.style.display = 'none';
+            }
+        });
+    }
+
+    function setSport(sport) {
+        document.getElementById('sportInput').value = sport;
+        document.getElementById('filterForm').submit();
+    }
+
+    function submitForm() {
+        document.getElementById('filterForm').submit();
+    }
+
+    function changeDate(delta) {
+        const input = document.getElementById('dateInput');
+        const d = new Date(input.value);
+        d.setDate(d.getDate() + delta);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        input.value = `${y}-${m}-${day}`;
+        submitForm();
+    }
+
+    // Otomatik yenileme progress bar
+    const liveCount = parseInt(document.getElementById('liveMatchCount')?.value || '0');
+    if (liveCount > 0) {
+        let countdown = 30;
+        const bar = document.getElementById('refreshProgress');
+        function tick() {
+            countdown--;
+            if (bar) bar.style.width = ((30 - countdown) / 30 * 100) + '%';
+            if (countdown < 1) { location.reload(); } else { setTimeout(tick, 1000); }
+        }
+        setTimeout(tick, 1000);
+    }
+</script>
+}
+

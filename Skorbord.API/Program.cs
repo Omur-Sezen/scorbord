@@ -1,36 +1,21 @@
-using Microsoft.EntityFrameworkCore;
-using Skorbord.API.Data;
 using Skorbord.API.Services;
+using Skorbord.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
-
-// Add MVC services for web pages
+// MVC + SignalR
 builder.Services.AddControllersWithViews();
-
-// Database configuration - SQL Server
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=localhost\\SQLEXPRESS;Database=SkorbordDB;Trusted_Connection=True;TrustServerCertificate=True";
-builder.Services.AddDbContext<SkorbordDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-// Add custom services
-builder.Services.AddScoped<StandingsService>();
-builder.Services.AddScoped<ExternalApiService>();
-builder.Services.AddScoped<DataProcessingService>();
-
-// Add HttpClient for external API
-builder.Services.AddHttpClient<ExternalApiService>();
-
-// Add Background Service
-builder.Services.AddHostedService<ScoreUpdateBackgroundService>();
-
-// Add Swagger
+builder.Services.AddSignalR();
+builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// SportScore API servisi - tek kaynak
+builder.Services.AddHttpClient<SportScoreService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 // CORS
 builder.Services.AddCors(options =>
@@ -38,14 +23,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+          .AllowAnyMethod()
+          .AllowAnyHeader();
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// HTTP pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -54,30 +39,19 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 
-// Configure routing
+// Routing
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllers();
+app.MapHub<MatchHub>("/matchHub");
 
-// Create database on startup
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var context = scope.ServiceProvider.GetRequiredService<SkorbordDbContext>();
-        context.Database.EnsureCreated();
-        Console.WriteLine("Database created/connected successfully!");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Database connection failed: {ex.Message}");
-        Console.WriteLine("Application will continue without database. Please check your connection string.");
-    }
-}
+Console.WriteLine("SKORBORD başlatıldı - SportScore API kullanılıyor.");
+Console.WriteLine($"API URL: {builder.Configuration["SportScoreApi:BaseUrl"] ?? "https://sportscore1.p.rapidapi.com"}");
 
 app.Run();

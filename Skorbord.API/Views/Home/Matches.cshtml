@@ -1,168 +1,159 @@
-@model IEnumerable<MatchDto>
+@using Skorbord.API.Models
+@model LeagueViewModel
 @{
-    ViewData["Title"] = $"{ViewBag.League?.Name} - Maçlar";
+    ViewData["Title"] = $"{ViewBag.LeagueName} - Maçlar";
+    var leagueName = (string)(ViewBag.LeagueName ?? "");
+    var selectedDate = (string)(ViewBag.SelectedDate ?? DateTime.Now.ToString("yyyy-MM-dd"));
+    var summary = ViewBag.Summary as LivescoresSummary;
+    var apiError = (bool)(ViewBag.ApiError ?? false);
 }
 
+<!-- Breadcrumb -->
 <div class="mb-6">
-    <nav class="text-sm">
-        <a asp-controller="Home" asp-action="Index" class="text-blue-600 hover:underline">Ana Sayfa</a>
-        <span class="mx-2">/</span>
-        <span class="text-gray-600">@ViewBag.League?.Name Maçlar</span>
+    <nav class="flex items-center gap-2 text-sm text-slate-400">
+        <a href="/" class="hover:text-emerald-400 transition">
+            <i class="fas fa-home mr-1"></i>Ana Sayfa
+        </a>
+        <i class="fas fa-chevron-right text-xs text-slate-600"></i>
+        <span class="text-slate-200">@leagueName</span>
     </nav>
 </div>
 
-<div class="bg-white rounded-lg shadow-lg overflow-hidden">
-    <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-6">
-        <div class="flex justify-between items-center">
+@if (apiError || Model == null)
+{
+    <div class="error-card mb-6">
+        <div class="flex items-center gap-4">
+            <div class="text-4xl">🚫</div>
             <div>
-                <h1 class="text-3xl font-bold">@ViewBag.League?.Name</h1>
-                <p class="text-green-100">Maç Listesi</p>
-            </div>
-            <div class="text-right">
-                <p class="text-green-100 text-sm">Toplam Maç</p>
-                <p class="font-semibold text-2xl">@Model.Count()</p>
+                <h3 class="text-lg font-bold text-red-300">Veri Alınamadı</h3>
+                <p class="text-red-400 text-sm mt-1">
+                    @(apiError ? "API bağlantı hatası. Lütfen tekrar deneyin." : $"'{leagueName}' ligi bu tarih için bulunamadı.")
+                </p>
+                <a href="/" class="mt-3 inline-flex items-center btn-retry">
+                    <i class="fas fa-arrow-left mr-2"></i>Ana Sayfaya Dön
+                </a>
             </div>
         </div>
     </div>
-
-    @if (Model.Any())
-    {
-        <div class="divide-y divide-gray-200">
-            @foreach (var match in Model)
-            {
-                <div class="p-6 hover:bg-gray-50 transition-colors">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center space-x-3">
-                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                @match.Round. Hafta
-                            </span>
-                            <span class="text-sm text-gray-600">
-                                <i class="fas fa-calendar mr-1"></i>
-                                @match.MatchDate.ToString("dd.MM.yyyy HH:mm")
-                            </span>
-                            <span class="text-sm text-gray-600">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                @match.Venue
-                            </span>
-                        </div>
-                        <div class="flex items-center">
-                            @switch (match.Status)
-                            {
-                                case "Live":
-                                    <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full animate-pulse">
-                                        <i class="fas fa-circle mr-1"></i>Canlı
-                                    </span>
-                                    break;
-                                case "Finished":
-                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                        <i class="fas fa-check mr-1"></i>Bitti
-                                    </span>
-                                    break;
-                                case "Postponed":
-                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                        <i class="fas fa-clock mr-1"></i>Ertelendi
-                                    </span>
-                                    break;
-                                default:
-                                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                        <i class="fas fa-calendar mr-1"></i>Planlandı
-                                    </span>
-                                    break;
-                            }
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center space-x-4">
-                            <div class="text-right">
-                                <p class="font-semibold text-gray-900">@match.HomeTeamName</p>
-                                <p class="text-sm text-gray-500">Ev Sahibi</p>
-                            </div>
-                            
-                            <div class="flex items-center space-x-2">
-                                <div class="text-center">
-                                    <span class="text-2xl font-bold @(match.HomeScore > match.AwayScore ? "text-green-600" : "text-gray-900")">
-                                        @match.HomeScore
-                                    </span>
-                                </div>
-                                <div class="text-gray-400 font-semibold">:</div>
-                                <div class="text-center">
-                                    <span class="text-2xl font-bold @(match.AwayScore > match.HomeScore ? "text-green-600" : "text-gray-900")">
-                                        @match.AwayScore
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="text-left">
-                                <p class="font-semibold text-gray-900">@match.AwayTeamName</p>
-                                <p class="text-sm text-gray-500">Deplasman</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    @if (match.Status == "Live")
-                    {
-                        <div class="mt-4 bg-red-50 border border-red-200 rounded p-3">
-                            <p class="text-red-800 text-sm font-medium">
-                                <i class="fas fa-broadcast-tower mr-2 animate-pulse"></i>
-                                Bu maç şu anda canlı oynanıyor. Skorlar otomatik olarak güncellenmektedir.
-                            </p>
-                        </div>
-                    }
+}
+else
+{
+    <!-- Lig Header -->
+    <div class="league-detail-header mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="league-sport-icon @(Model.Sport == "Futbol" ? "soccer" : Model.Sport == "Basketbol" ? "basketball" : "tennis")">
+                    @if (Model.Sport == "Futbol")
+                    { <i class="fas fa-futbol"></i> }
+                    else if (Model.Sport == "Basketbol")
+                    { <i class="fas fa-basketball-ball"></i> }
+                    else
+                    { <i class="fas fa-table-tennis"></i> }
                 </div>
-            }
-        </div>
-    }
-    else
-    {
-        <div class="text-center py-12">
-            <i class="fas fa-calendar-alt text-gray-300 text-6xl mb-4"></i>
-            <p class="text-gray-500 text-lg">Bu lig için henüz maç verisi bulunmamaktadır.</p>
-            <p class="text-gray-400 text-sm mt-2">Maç programı duyurulduğunda burada görünecektir.</p>
-        </div>
-    }
-</div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black text-white">@Model.League</h1>
+                    <div class="flex items-center gap-3 mt-1">
+                        <span class="text-slate-400 text-sm">
+                            <i class="fas fa-globe-europe mr-1 text-emerald-400"></i>@Model.Country
+                        </span>
+                        <span class="text-slate-400 text-sm">
+                            <i class="fas fa-futbol mr-1 text-blue-400"></i>@Model.Sport
+                        </span>
+                        <span class="league-match-count">@Model.Matches.Count maç</span>
+                    </div>
+                </div>
+            </div>
 
-<div class="mt-6 flex justify-between items-center">
-    <a asp-controller="Home" asp-action="Index" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">
-        <i class="fas fa-arrow-left mr-2"></i>Geri Dön
-    </a>
-    
-    <div class="text-sm text-gray-600">
-        <i class="fas fa-info-circle mr-1"></i>
-        Canlı maçlar otomatik olarak güncellenmektedir
+            <div class="flex gap-3">
+                <a href="@($"/?date={selectedDate}")" class="btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Geri
+                </a>
+                <button onclick="location.reload()" class="btn-primary">
+                    <i class="fas fa-sync-alt mr-2"></i>Yenile
+                </button>
+            </div>
+        </div>
     </div>
-    
-    @if (ViewBag.League != null)
-    {
-        <a asp-controller="Home" asp-action="Standings" asp-route-leagueId="@ViewBag.League.Id" 
-           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-            <i class="fas fa-table mr-2"></i>Puan Durumu
-        </a>
-    }
-</div>
+
+    <!-- Maç Listesi -->
+    <div class="matches-container">
+        @if (!Model.Matches.Any())
+        {
+            <div class="empty-state">
+                <div class="text-5xl mb-3">📋</div>
+                <p class="text-slate-400">Bu lig için maç bulunamadı.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var match in Model.Matches.OrderBy(m => m.StartTime))
+            {
+                <a href="/Home/MatchDetail/@match.Id?date=@selectedDate" class="match-row group @(match.IsLive ? "live" : match.State == "post" ? "finished" : "")">
+                    <!-- Saat & Durum -->
+                    <div class="match-time-col">
+                        <span class="match-time">@match.StartTime</span>
+                        @if (match.IsLive)
+                        {
+                            <span class="status-live">
+                                <span class="status-dot"></span>@match.Status
+                            </span>
+                        }
+                        else if (match.State == "post")
+                        {
+                            <span class="status-finished">@match.Status</span>
+                        }
+                        else
+                        {
+                            <span class="status-scheduled">@match.Status</span>
+                        }
+                    </div>
+
+                    <!-- Ev Sahibi -->
+                    <div class="match-team home">
+                        <span class="team-name">@match.HomeTeam</span>
+                    </div>
+
+                    <!-- Skor -->
+                    <div class="match-score-col">
+                        @if (match.HomeScore.HasValue && match.AwayScore.HasValue)
+                        {
+                            <div class="score-box @(match.IsLive ? "live" : "")">
+                                <span class="score-num">@match.HomeScore</span>
+                                <span class="score-sep">:</span>
+                                <span class="score-num">@match.AwayScore</span>
+                            </div>
+                            @if (match.HalfTimeScore != null)
+                            {
+                                <div class="ht-score">İY: @match.HalfTimeScore.Home - @match.HalfTimeScore.Away</div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="score-box scheduled">
+                                <span class="text-slate-400 text-sm font-bold">vs</span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Deplasman -->
+                    <div class="match-team away">
+                        <span class="team-name">@match.AwayTeam</span>
+                    </div>
+
+                </a>
+            }
+        }
+    </div>
+}
 
 @section Scripts {
-    <script>
-        // Auto-refresh matches every 30 seconds
-        let refreshInterval;
-        
-        function startAutoRefresh() {
-            refreshInterval = setInterval(() => {
-                location.reload();
-            }, 30000);
-        }
-        
-        // Start auto-refresh
-        startAutoRefresh();
-        
-        // Stop refresh when page is not visible
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                clearInterval(refreshInterval);
-            } else {
-                startAutoRefresh();
-            }
-        });
-    </script>
+<script>
+    // Canlı maç varsa her 30 sn'de yenile
+    @if (Model?.Matches.Any(m => m.IsLive) == true)
+    {
+        <text>
+        setTimeout(() => location.reload(), 30000);
+        </text>
+    }
+</script>
 }

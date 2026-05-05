@@ -1,97 +1,80 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Skorbord.API.Data;
-using Skorbord.API.DTOs;
+using Skorbord.API.Models;
 using Skorbord.API.Services;
 
 namespace Skorbord.API.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly SkorbordDbContext _context;
-        private readonly StandingsService _standingsService;
+        private readonly SportScoreService _sportScoreService;
+        private readonly ILogger<HomeController> _logger;
 
-        public HomeController(SkorbordDbContext context, StandingsService standingsService)
+        public HomeController(SportScoreService sportScoreService, ILogger<HomeController> logger)
         {
-            _context = context;
-            _standingsService = standingsService;
+            _sportScoreService = sportScoreService;
+            _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        /// <summary>
+        /// Ana sayfa — canlı skor tablosu
+        /// </summary>
+        public async Task<IActionResult> Index(string? sport = null, string? date = null)
         {
-            try
-            {
-                var leagues = await _context.Leagues
-                    .Select(l => new { l.Id, l.Name, l.Country, l.Season })
-                    .ToListAsync();
+            // Varsayılan: tüm sporlar, bugün
+            var selectedSport = sport;
+            var selectedDate = date ?? DateTime.Now.ToString("yyyy-MM-dd");
 
-                ViewBag.Leagues = leagues;
-            }
-            catch (Exception ex)
-            {
-                // Handle database connection issues gracefully
-                ViewBag.Leagues = new List<object>();
-                ViewBag.DatabaseError = "Veritabanı bağlantısı şu anda mevcut değil. Lütfen daha sonra tekrar deneyin.";
-                Console.WriteLine($"Database error in Index: {ex.Message}");
-            }
-            
+            var data = await _sportScoreService.GetLivescoresAsync(selectedSport, selectedDate);
+
+            ViewBag.Data = data;
+            ViewBag.SelectedSport = selectedSport ?? "";
+            ViewBag.SelectedDate = selectedDate;
+            ViewBag.ApiError = data == null;
+
             return View();
         }
 
-        public async Task<IActionResult> Standings(int leagueId)
+        /// <summary>
+        /// Belirli bir ligin maçları
+        /// </summary>
+        public async Task<IActionResult> Matches(string leagueName, string? sport = null, string? date = null)
         {
-            try
-            {
-                var standings = await _standingsService.GetLeagueStandingsAsync(leagueId);
-                return View(standings);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Database error in Standings: {ex.Message}");
-                TempData["Error"] = "Veritabanı bağlantısı şu anda mevcut değil. Lütfen daha sonra tekrar deneyin.";
+            if (string.IsNullOrWhiteSpace(leagueName))
                 return RedirectToAction("Index");
-            }
+
+            var selectedDate = date ?? DateTime.Now.ToString("yyyy-MM-dd");
+            var result = await _sportScoreService.GetLeagueMatchesAsync(leagueName, sport, selectedDate);
+
+            ViewBag.LeagueName = leagueName;
+            ViewBag.SelectedDate = selectedDate;
+            ViewBag.Summary = result.Summary;
+            ViewBag.ApiError = result.League == null;
+
+            return View(result.League);
         }
 
-        public async Task<IActionResult> Matches(int leagueId)
+        /// <summary>
+        /// Maç detayı — temel skor ve bilgiler
+        /// </summary>
+        public async Task<IActionResult> MatchDetail(string id, string? date = null)
         {
-            try
-            {
-                var matches = await _context.Matches
-                    .Include(m => m.HomeTeam)
-                    .Include(m => m.AwayTeam)
-                    .Include(m => m.League)
-                    .Where(m => m.LeagueId == leagueId)
-                    .OrderByDescending(m => m.MatchDate)
-                    .Select(m => new MatchDto
-                    {
-                        Id = m.Id,
-                        HomeTeamName = m.HomeTeam.Name,
-                        AwayTeamName = m.AwayTeam.Name,
-                        HomeTeamId = m.HomeTeamId,
-                        AwayTeamId = m.AwayTeamId,
-                        LeagueName = m.League.Name,
-                        LeagueId = m.LeagueId,
-                        MatchDate = m.MatchDate,
-                        Status = m.Status,
-                        HomeScore = m.HomeScore,
-                        AwayScore = m.AwayScore,
-                        Venue = m.Venue,
-                        Round = m.Round,
-                        CreatedAt = m.CreatedAt,
-                        UpdatedAt = m.UpdatedAt
-                    })
-                    .ToListAsync();
+            if (string.IsNullOrWhiteSpace(id))
+                return RedirectToAction("Index");
 
-                ViewBag.League = await _context.Leagues.FindAsync(leagueId);
-                return View(matches);
-            }
-            catch (Exception ex)
+            var selectedDate = date ?? DateTime.Now.ToString("yyyy-MM-dd");
+            var result = await _sportScoreService.FindMatchByIdAsync(id, selectedDate);
+
+            if (result == null || result.Value.Match == null)
             {
-                Console.WriteLine($"Database error in Matches: {ex.Message}");
-                TempData["Error"] = "Veritabanı bağlantısı şu anda mevcut değil. Lütfen daha sonra tekrar deneyin.";
+                TempData["Error"] = "Maç bulunamadı veya API yanıt vermedi.";
                 return RedirectToAction("Index");
             }
+
+            ViewBag.Match = result.Value.Match;
+            ViewBag.League = result.Value.League;
+            ViewBag.SelectedDate = selectedDate;
+
+            return View(result.Value.Match);
         }
 
         public IActionResult About()
